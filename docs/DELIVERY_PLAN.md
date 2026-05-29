@@ -7,12 +7,14 @@
 | PR | Scope | Description |
 | --- | --- | --- |
 | PR 1 | Project setup | Vite、React、TypeScript、测试和 lint 基础工程。 |
-| PR 2 | Diff parser | 实现 `parseChangedFiles` 并补单元测试。 |
-| PR 3 | Rule engine | 实现风险规则、评分模型和摘要生成。 |
-| PR 4 | Workbench UI | 搭建输入区、指标区、审查报告区和文件区。 |
-| PR 5 | Report generation | 生成 PR 描述、测试建议、交付清单和 Markdown 导出。 |
-| PR 6 | Documentation | README、PRD、架构、规则说明和 demo 脚本。 |
-| PR 7 | Polish and demo | 录制视频、补充部署链接、修复演示反馈。 |
+| PR 2 | GitHub import | 实现 GitHub PR URL 解析、metadata 和 diff 拉取。 |
+| PR 3 | Diff parser | 实现 `parseChangedFiles` 并补单元测试。 |
+| PR 4 | Rule engine | 实现风险规则、评分模型和摘要生成。 |
+| PR 5 | PR URL UI | 搭建 PR 链接导入、指标区、审查报告区和文件区。 |
+| PR 6 | Browser extension | 在 GitHub PR 页面注入分析面板。 |
+| PR 7 | Report generation | 生成 PR 描述、测试建议、交付清单和 Markdown 导出。 |
+| PR 8 | Documentation | README、PRD、架构、规则说明和 demo 脚本。 |
+| PR 9 | Polish and demo | 录制视频、补充部署链接、修复演示反馈。 |
 
 ## 每个 PR 的最低要求
 

@@ -2,45 +2,65 @@ import { useMemo, useState } from "react";
 import { AppHeader } from "./components/AppHeader";
 import { ChangedFilesPanel } from "./components/ChangedFilesPanel";
 import { MetricsGrid } from "./components/MetricsGrid";
-import { PullRequestEditor } from "./components/PullRequestEditor";
+import { PullRequestImporter } from "./components/PullRequestImporter";
 import { ReviewPanel } from "./components/ReviewPanel";
-import { samplePullRequest } from "./data/samplePullRequest";
+import {
+  importGitHubPullRequest,
+  PullRequestImportError,
+} from "./lib/githubPullRequest";
 import { createMarkdownReport } from "./lib/markdownReport";
-import { analyzePullRequest, type ReviewMode } from "./lib/reviewEngine";
+import { analyzePullRequest, type ReviewInput } from "./lib/reviewEngine";
 
 export function App() {
-  const [title, setTitle] = useState(samplePullRequest.title);
-  const [description, setDescription] = useState(samplePullRequest.description);
-  const [diff, setDiff] = useState(samplePullRequest.diff);
-  const [mode, setMode] = useState<ReviewMode>("balanced");
+  const [prUrl, setPrUrl] = useState("");
+  const [pullRequest, setPullRequest] = useState<ReviewInput | null>(null);
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
   const [activeTab, setActiveTab] = useState<"findings" | "description" | "tests">(
     "findings",
   );
 
   const report = useMemo(
-    () => analyzePullRequest({ title, description, diff, mode }),
-    [title, description, diff, mode],
+    () => (pullRequest ? analyzePullRequest(pullRequest) : null),
+    [pullRequest],
   );
 
-  function loadSample() {
-    setTitle(samplePullRequest.title);
-    setDescription(samplePullRequest.description);
-    setDiff(samplePullRequest.diff);
+  async function analyzeUrl() {
+    setError("");
+    setLoading(true);
+
+    try {
+      const imported = await importGitHubPullRequest(prUrl);
+      setPullRequest(imported);
+      setActiveTab("findings");
+    } catch (caught) {
+      const message =
+        caught instanceof PullRequestImportError
+          ? caught.message
+          : "导入失败，请确认该 GitHub PR 公开可访问。";
+      setError(message);
+    } finally {
+      setLoading(false);
+    }
   }
 
-  function clearInput() {
-    setTitle("");
-    setDescription("");
-    setDiff("");
+  function clearAnalysis() {
+    setPrUrl("");
+    setPullRequest(null);
+    setError("");
   }
 
   function downloadReport() {
-    const markdown = createMarkdownReport({ title, description, diff, mode }, report);
+    if (!pullRequest || !report) {
+      return;
+    }
+
+    const markdown = createMarkdownReport(pullRequest, report);
     const blob = new Blob([markdown], { type: "text/markdown;charset=utf-8" });
     const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
     link.href = url;
-    link.download = `${sanitizeFileName(title) || "pr-review-report"}.md`;
+    link.download = `${sanitizeFileName(pullRequest.title) || "pr-review-report"}.md`;
     link.click();
     URL.revokeObjectURL(url);
   }
@@ -48,29 +68,42 @@ export function App() {
   return (
     <main className="app-shell">
       <AppHeader
-        onClear={clearInput}
+        canDownload={Boolean(report)}
+        onClear={clearAnalysis}
         onDownload={downloadReport}
-        onLoadSample={loadSample}
       />
-      <MetricsGrid report={report} />
+      {report ? (
+        <MetricsGrid report={report} />
+      ) : (
+        <section className="empty-analysis">
+          <strong>等待 GitHub PR 链接</strong>
+          <p>输入公开 PR 地址后，系统会自动拉取 PR 元数据和 diff 并开始审查。</p>
+        </section>
+      )}
       <section className="workbench">
-        <PullRequestEditor
-          description={description}
-          diff={diff}
-          onDescriptionChange={setDescription}
-          onDiffChange={setDiff}
-          onModeChange={setMode}
-          onTitleChange={setTitle}
-          mode={mode}
-          title={title}
+        <PullRequestImporter
+          error={error}
+          loading={loading}
+          onAnalyze={analyzeUrl}
+          onUrlChange={setPrUrl}
+          sourceUrl={pullRequest?.sourceUrl}
+          title={pullRequest?.title}
+          url={prUrl}
         />
-        <ReviewPanel
-          activeTab={activeTab}
-          fullReport={createMarkdownReport({ title, description, diff, mode }, report)}
-          onTabChange={setActiveTab}
-          report={report}
-        />
-        <ChangedFilesPanel files={report.changedFiles} />
+        {report && pullRequest ? (
+          <ReviewPanel
+            activeTab={activeTab}
+            fullReport={createMarkdownReport(pullRequest, report)}
+            onTabChange={setActiveTab}
+            report={report}
+          />
+        ) : (
+          <section className="review-panel placeholder-panel">
+            <h2>PR 分析结果</h2>
+            <p>这里会显示风险评分、审查意见、生成的 PR 描述和测试建议。</p>
+          </section>
+        )}
+        <ChangedFilesPanel files={report?.changedFiles ?? []} />
       </section>
     </main>
   );

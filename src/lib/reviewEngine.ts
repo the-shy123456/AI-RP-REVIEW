@@ -30,6 +30,7 @@ export interface ReviewInput {
   description: string;
   diff: string;
   mode?: ReviewMode;
+  sourceUrl?: string;
 }
 
 export interface ReviewReport {

@@ -13,7 +13,7 @@ export function ChangedFilesPanel({ files }: ChangedFilesPanelProps) {
       </div>
       <div className="file-list">
         {files.length === 0 ? (
-          <p className="muted-note">粘贴 git diff 后会显示文件列表。</p>
+          <p className="muted-note">导入 GitHub PR 后会显示文件列表。</p>
         ) : (
           files.map((file) => (
             <article className="file-row" key={`${file.path}-${file.status}`}>

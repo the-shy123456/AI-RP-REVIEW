@@ -37,6 +37,7 @@ export function createMarkdownReport(
 ## PR 信息
 
 - 标题：${input.title.trim() || "未填写"}
+- PR 链接：${input.sourceUrl ?? "未提供"}
 - 审查策略：${report.mode}
 - 风险等级：${report.riskLevel}
 - 风险分：${report.riskScore}/100

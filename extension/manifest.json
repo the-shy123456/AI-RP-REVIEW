@@ -1,0 +1,19 @@
+{
+  "manifest_version": 3,
+  "name": "AI PR Review Assistant",
+  "version": "0.1.0",
+  "description": "Analyze public GitHub pull requests directly on GitHub pages.",
+  "permissions": [],
+  "host_permissions": [
+    "https://github.com/*",
+    "https://api.github.com/*"
+  ],
+  "content_scripts": [
+    {
+      "matches": ["https://github.com/*/*/pull/*"],
+      "js": ["content.js"],
+      "css": ["content.css"],
+      "run_at": "document_idle"
+    }
+  ]
+}
