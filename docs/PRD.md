@@ -7,6 +7,7 @@
 ## Requirements
 
 - 用户可以输入公开 GitHub PR 链接。
+- 用户可以在页面配置第三方大模型 `BASE_URL`、`API_KEY`、`MODEL`。
 - 系统可以自动拉取 PR 标题、描述和 diff。
 - 系统可以解析变更文件、文件状态、增删行数量。
 - 系统可以识别安全、测试、可靠性、可维护性和流程规范风险。
@@ -21,7 +22,7 @@
 
 - [ ] 打开首页即可看到 GitHub PR URL 导入入口。
 - [ ] 输入公开 GitHub PR URL 后可以自动拉取并分析。
-- [ ] 配置 `OPENAI_API_KEY` 后可以运行 AI 代码评审。
+- [ ] 页面填写 `BASE_URL`、`API_KEY`、`MODEL` 后可以运行 AI 代码评审。
 - [ ] AI 代码评审包含总体评价、代码质量分、问题列表和合并建议。
 - [ ] 浏览器插件可加载到 Chrome/Edge，并在 GitHub PR 页面显示分析按钮。
 - [ ] `npm run test` 通过。
@@ -30,7 +31,7 @@
 
 ## Technical Approach
 
-MVP 的 GitHub PR 导入和规则分析在前端完成；AI 代码评审通过后端接口完成，避免暴露 OpenAI API Key。GitHub PR 导入逻辑放在 `src/lib/githubPullRequest.ts`，核心规则 Review 逻辑放在 `src/lib/reviewEngine.ts`，AI 评审逻辑放在 `server/aiReviewCore.mjs`。
+MVP 的 GitHub PR 导入和规则分析在前端完成；AI 代码评审通过后端接口完成。页面提供第三方大模型配置入口，支持 OpenAI-compatible `BASE_URL`、`API_KEY`、`MODEL`。GitHub PR 导入逻辑放在 `src/lib/githubPullRequest.ts`，核心规则 Review 逻辑放在 `src/lib/reviewEngine.ts`，AI 评审逻辑放在 `server/aiReviewCore.mjs`。
 
 ## Decision
 

@@ -2,11 +2,13 @@ import { useMemo, useState } from "react";
 import { AppHeader } from "./components/AppHeader";
 import { ChangedFilesPanel } from "./components/ChangedFilesPanel";
 import { MetricsGrid } from "./components/MetricsGrid";
+import { ModelConfigPanel } from "./components/ModelConfigPanel";
 import { PullRequestImporter } from "./components/PullRequestImporter";
 import { ReviewPanel } from "./components/ReviewPanel";
 import {
   requestAiCodeReview,
   type AiCodeReview,
+  type LlmConfig,
 } from "./lib/aiCodeReview";
 import {
   importGitHubPullRequest,
@@ -16,9 +18,16 @@ import { createMarkdownReport } from "./lib/markdownReport";
 import { analyzePullRequest, type ReviewInput } from "./lib/reviewEngine";
 
 type ReviewTab = "findings" | "ai" | "description" | "tests";
+const llmConfigStorageKey = "ai-pr-review.llm-config";
+const defaultLlmConfig: LlmConfig = {
+  apiKey: "",
+  baseUrl: "https://api.openai.com/v1",
+  model: "",
+};
 
 export function App() {
   const [prUrl, setPrUrl] = useState("");
+  const [llmConfig, setLlmConfig] = useState<LlmConfig>(() => loadLlmConfig());
   const [pullRequest, setPullRequest] = useState<ReviewInput | null>(null);
   const [aiReview, setAiReview] = useState<AiCodeReview | null>(null);
   const [aiReviewError, setAiReviewError] = useState("");
@@ -71,7 +80,7 @@ export function App() {
     setActiveTab("ai");
 
     try {
-      setAiReview(await requestAiCodeReview(pullRequest, report));
+      setAiReview(await requestAiCodeReview(pullRequest, report, llmConfig));
     } catch (caught) {
       setAiReviewError(
         caught instanceof Error
@@ -114,15 +123,27 @@ export function App() {
         </section>
       )}
       <section className="workbench">
-        <PullRequestImporter
-          error={error}
-          loading={loading}
-          onAnalyze={analyzeUrl}
-          onUrlChange={setPrUrl}
-          sourceUrl={pullRequest?.sourceUrl}
-          title={pullRequest?.title}
-          url={prUrl}
-        />
+        <div className="left-stack">
+          <PullRequestImporter
+            error={error}
+            loading={loading}
+            onAnalyze={analyzeUrl}
+            onUrlChange={setPrUrl}
+            sourceUrl={pullRequest?.sourceUrl}
+            title={pullRequest?.title}
+            url={prUrl}
+          />
+          <ModelConfigPanel
+            config={llmConfig}
+            onChange={(nextConfig) => {
+              setLlmConfig(nextConfig);
+              sessionStorage.setItem(
+                llmConfigStorageKey,
+                JSON.stringify(nextConfig),
+              );
+            }}
+          />
+        </div>
         {report && pullRequest ? (
           <ReviewPanel
             activeTab={activeTab}
@@ -153,4 +174,18 @@ function sanitizeFileName(value: string) {
     .replace(/[^a-z0-9\u4e00-\u9fa5]+/g, "-")
     .replace(/^-+|-+$/g, "")
     .slice(0, 80);
+}
+
+function loadLlmConfig(): LlmConfig {
+  try {
+    const saved = sessionStorage.getItem(llmConfigStorageKey);
+    return saved
+      ? {
+          ...defaultLlmConfig,
+          ...JSON.parse(saved),
+        }
+      : defaultLlmConfig;
+  } catch {
+    return defaultLlmConfig;
+  }
 }

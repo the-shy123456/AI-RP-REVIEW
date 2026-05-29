@@ -49,7 +49,7 @@
 
 ## AI 代码评审
 
-AI 评审由 `/api/ai-review` 后端接口提供，前端不会暴露 `OPENAI_API_KEY`。
+AI 评审由 `/api/ai-review` 后端接口提供。页面提供 `BASE_URL`、`API_KEY`、`MODEL` 三项配置，支持第三方 OpenAI-compatible 大模型。
 
 AI 评审输出：
 

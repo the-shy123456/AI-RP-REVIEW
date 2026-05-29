@@ -72,13 +72,13 @@ type Rule = {
 
 ## AI Review API
 
-AI 代码评审通过后端接口完成：
+AI 代码评审通过后端接口完成，支持页面传入第三方 OpenAI-compatible 模型配置：
 
-- `server/aiReviewCore.mjs`：构造大模型评审 prompt、调用 OpenAI Responses API、解析结构化 JSON。
+- `server/aiReviewCore.mjs`：构造大模型评审 prompt、调用 OpenAI-compatible Chat Completions API、解析结构化 JSON。
 - `server/aiReviewServer.mjs`：本地开发 API 服务。
 - `api/ai-review.js`：Vercel 部署入口。
 
-前端只调用 `/api/ai-review`，不会读取或暴露 `OPENAI_API_KEY`。
+前端调用 `/api/ai-review` 时会传入 `BASE_URL`、`API_KEY`、`MODEL`。后端也支持 `OPENAI_BASE_URL`、`OPENAI_API_KEY`、`OPENAI_MODEL` 作为默认配置。
 
 ## Future Extensions
 

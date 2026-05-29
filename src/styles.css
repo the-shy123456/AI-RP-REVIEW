@@ -192,6 +192,12 @@ h1 {
   align-items: stretch;
 }
 
+.left-stack {
+  display: grid;
+  gap: 16px;
+  align-content: start;
+}
+
 .input-panel,
 .review-panel,
 .files-panel {
@@ -199,6 +205,10 @@ h1 {
   border: 1px solid #d8e2e3;
   border-radius: 8px;
   background: #ffffff;
+}
+
+.model-config-panel {
+  min-height: auto;
 }
 
 .input-panel,
@@ -352,6 +362,33 @@ textarea {
 input {
   height: 42px;
   padding: 0 12px;
+}
+
+.secret-input {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  align-items: center;
+  gap: 8px;
+  border: 1px solid #cbd7d8;
+  border-radius: 8px;
+  background: #f8fbfb;
+  padding-left: 10px;
+}
+
+.secret-input svg {
+  color: #607176;
+}
+
+.secret-input input {
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+.secret-input:focus-within {
+  border-color: #3d8179;
+  background: #ffffff;
+  box-shadow: 0 0 0 3px rgba(61, 129, 121, 0.12);
 }
 
 textarea {

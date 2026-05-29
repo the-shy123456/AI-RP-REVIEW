@@ -28,8 +28,24 @@ describe("requestAiCodeReview", () => {
     );
 
     await expect(
-      requestAiCodeReview(input, analyzePullRequest(input), fetcher),
+      requestAiCodeReview(
+        input,
+        analyzePullRequest(input),
+        {
+          apiKey: "sk-test",
+          baseUrl: "https://api.example.com/v1",
+          model: "test-model",
+        },
+        fetcher,
+      ),
     ).resolves.toMatchObject(aiReview);
+
+    expect(fetcher).toHaveBeenCalledWith(
+      "/api/ai-review",
+      expect.objectContaining({
+        body: expect.stringContaining("\"model\":\"test-model\""),
+      }),
+    );
   });
 
   it("surfaces backend error messages", async () => {
@@ -40,7 +56,16 @@ describe("requestAiCodeReview", () => {
     );
 
     await expect(
-      requestAiCodeReview(input, analyzePullRequest(input), fetcher),
+      requestAiCodeReview(
+        input,
+        analyzePullRequest(input),
+        {
+          apiKey: "",
+          baseUrl: "",
+          model: "",
+        },
+        fetcher,
+      ),
     ).rejects.toThrow("OPENAI_API_KEY 未配置");
   });
 });

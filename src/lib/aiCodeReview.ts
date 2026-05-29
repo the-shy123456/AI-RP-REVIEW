@@ -26,6 +26,12 @@ export interface AiCodeReview {
   summary: string;
 }
 
+export interface LlmConfig {
+  apiKey: string;
+  baseUrl: string;
+  model: string;
+}
+
 export class AiReviewError extends Error {
   constructor(message: string) {
     super(message);
@@ -36,10 +42,11 @@ export class AiReviewError extends Error {
 export async function requestAiCodeReview(
   input: ReviewInput,
   ruleReport: ReviewReport,
+  llmConfig: LlmConfig,
   fetcher: typeof fetch = fetch,
 ): Promise<AiCodeReview> {
   const response = await fetcher("/api/ai-review", {
-    body: JSON.stringify({ input, ruleReport }),
+    body: JSON.stringify({ input, llmConfig, ruleReport }),
     headers: {
       "Content-Type": "application/json",
     },

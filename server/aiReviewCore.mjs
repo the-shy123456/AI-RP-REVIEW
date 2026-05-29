@@ -1,77 +1,6 @@
-const OPENAI_ENDPOINT = "https://api.openai.com/v1/responses";
 const MAX_DIFF_CHARS = 90000;
 
-const responseSchema = {
-  type: "object",
-  additionalProperties: false,
-  required: [
-    "summary",
-    "codeQualityScore",
-    "dimensions",
-    "findings",
-    "positiveNotes",
-    "mergeRecommendation",
-    "mergeRecommendationText",
-  ],
-  properties: {
-    summary: { type: "string" },
-    codeQualityScore: { type: "integer", minimum: 0, maximum: 100 },
-    dimensions: {
-      type: "array",
-      minItems: 4,
-      maxItems: 8,
-      items: {
-        type: "object",
-        additionalProperties: false,
-        required: ["name", "score", "assessment"],
-        properties: {
-          name: { type: "string" },
-          score: { type: "integer", minimum: 0, maximum: 100 },
-          assessment: { type: "string" },
-        },
-      },
-    },
-    findings: {
-      type: "array",
-      maxItems: 12,
-      items: {
-        type: "object",
-        additionalProperties: false,
-        required: ["severity", "title", "file", "line", "recommendation"],
-        properties: {
-          severity: { type: "string", enum: ["critical", "high", "medium", "low"] },
-          title: { type: "string" },
-          file: { type: ["string", "null"] },
-          line: { type: ["integer", "null"], minimum: 1 },
-          recommendation: { type: "string" },
-        },
-      },
-    },
-    positiveNotes: {
-      type: "array",
-      minItems: 0,
-      maxItems: 6,
-      items: { type: "string" },
-    },
-    mergeRecommendation: {
-      type: "string",
-      enum: ["approve", "comment", "request_changes"],
-    },
-    mergeRecommendationText: { type: "string" },
-  },
-};
-
 export async function handleAiReviewRequest(payload, fetcher = fetch) {
-  const apiKey = process.env.OPENAI_API_KEY;
-  if (!apiKey) {
-    return {
-      status: 503,
-      body: {
-        error: "OPENAI_API_KEY 未配置。请在后端环境变量中配置后再使用 AI 代码评审。",
-      },
-    };
-  }
-
   const input = payload?.input;
   const ruleReport = payload?.ruleReport;
 
@@ -82,36 +11,45 @@ export async function handleAiReviewRequest(payload, fetcher = fetch) {
     };
   }
 
-  const model = process.env.OPENAI_MODEL || "gpt-5.5";
+  const llmConfig = resolveLlmConfig(payload?.llmConfig);
+  if (!llmConfig.apiKey) {
+    return {
+      status: 503,
+      body: {
+        error: "请在页面大模型配置中填写 API_KEY，或在后端环境变量中配置 OPENAI_API_KEY。",
+      },
+    };
+  }
+
+  if (!llmConfig.model) {
+    return {
+      status: 400,
+      body: {
+        error: "请在页面大模型配置中填写 MODEL，或在后端环境变量中配置 OPENAI_MODEL。",
+      },
+    };
+  }
+
   const prompt = buildPrompt(input, ruleReport);
-  const response = await fetcher(OPENAI_ENDPOINT, {
+  const response = await fetcher(buildChatCompletionsUrl(llmConfig.baseUrl), {
     body: JSON.stringify({
-      model,
-      input: [
+      messages: [
         {
           role: "system",
           content:
-            "你是资深代码审查工程师。请基于 PR diff 做严格但务实的代码评审，关注漏洞、边界条件、可维护性、完整性、测试缺口和合并风险。只输出符合 schema 的 JSON。",
+            "你是资深代码审查工程师。请基于 PR diff 做严格但务实的代码评审，关注漏洞、边界条件、可维护性、完整性、测试缺口和合并风险。只输出 JSON，不要输出 Markdown。",
         },
         {
           role: "user",
-          content: prompt,
+          content: `${prompt}\n\n请只返回一个 JSON 对象，字段必须为：summary, codeQualityScore, dimensions, findings, positiveNotes, mergeRecommendation, mergeRecommendationText。mergeRecommendation 只能是 approve、comment 或 request_changes。`,
         },
       ],
-      reasoning: {
-        effort: process.env.OPENAI_REASONING_EFFORT || "medium",
-      },
-      text: {
-        format: {
-          type: "json_schema",
-          name: "ai_code_review",
-          strict: true,
-          schema: responseSchema,
-        },
-      },
+      model: llmConfig.model,
+      response_format: { type: "json_object" },
+      temperature: 0.2,
     }),
     headers: {
-      Authorization: `Bearer ${apiKey}`,
+      Authorization: `Bearer ${llmConfig.apiKey}`,
       "Content-Type": "application/json",
     },
     method: "POST",
@@ -122,7 +60,7 @@ export async function handleAiReviewRequest(payload, fetcher = fetch) {
     return {
       status: response.status,
       body: {
-        error: data?.error?.message || `OpenAI API 请求失败：${response.status}`,
+        error: data?.error?.message || `大模型 API 请求失败：${response.status}`,
       },
     };
   }
@@ -130,14 +68,38 @@ export async function handleAiReviewRequest(payload, fetcher = fetch) {
   try {
     return {
       status: 200,
-      body: JSON.parse(extractResponseText(data)),
+      body: normalizeAiReview(JSON.parse(extractChatCompletionText(data))),
     };
   } catch {
     return {
       status: 502,
-      body: { error: "AI 返回结果不是有效 JSON，请稍后重试。" },
+      body: { error: "AI 返回结果不是有效 JSON，请检查模型是否支持 JSON 输出。" },
     };
   }
+}
+
+export function buildChatCompletionsUrl(baseUrl) {
+  const normalized = String(baseUrl || "https://api.openai.com/v1").replace(/\/+$/, "");
+  if (normalized.endsWith("/chat/completions")) {
+    return normalized;
+  }
+
+  return `${normalized}/chat/completions`;
+}
+
+function resolveLlmConfig(config) {
+  return {
+    apiKey: clean(config?.apiKey) || clean(process.env.OPENAI_API_KEY),
+    baseUrl:
+      clean(config?.baseUrl) ||
+      clean(process.env.OPENAI_BASE_URL) ||
+      "https://api.openai.com/v1",
+    model: clean(config?.model) || clean(process.env.OPENAI_MODEL),
+  };
+}
+
+function clean(value) {
+  return typeof value === "string" ? value.trim() : "";
 }
 
 function buildPrompt(input, ruleReport) {
@@ -172,19 +134,67 @@ ${diff}
 \`\`\``;
 }
 
-function extractResponseText(data) {
-  if (typeof data.output_text === "string") {
-    return data.output_text;
+function extractChatCompletionText(data) {
+  const content = data?.choices?.[0]?.message?.content;
+  if (typeof content === "string") {
+    return content;
   }
 
-  const texts = [];
-  for (const item of data.output || []) {
-    for (const content of item.content || []) {
-      if (content.type === "output_text" && typeof content.text === "string") {
-        texts.push(content.text);
-      }
-    }
+  if (Array.isArray(content)) {
+    return content
+      .map((part) => part?.text || part?.content || "")
+      .filter(Boolean)
+      .join("\n");
   }
 
-  return texts.join("\n");
+  return "";
+}
+
+function normalizeAiReview(value) {
+  return {
+    codeQualityScore: clampScore(value.codeQualityScore),
+    dimensions: Array.isArray(value.dimensions)
+      ? value.dimensions.map((item) => ({
+          assessment: String(item.assessment || ""),
+          name: String(item.name || "未命名维度"),
+          score: clampScore(item.score),
+        }))
+      : [],
+    findings: Array.isArray(value.findings)
+      ? value.findings.map((item) => ({
+          file: item.file || null,
+          line: Number.isInteger(item.line) ? item.line : null,
+          recommendation: String(item.recommendation || ""),
+          severity: normalizeSeverity(item.severity),
+          title: String(item.title || "未命名问题"),
+        }))
+      : [],
+    mergeRecommendation: normalizeMergeRecommendation(value.mergeRecommendation),
+    mergeRecommendationText: String(value.mergeRecommendationText || ""),
+    positiveNotes: Array.isArray(value.positiveNotes)
+      ? value.positiveNotes.map((item) => String(item))
+      : [],
+    summary: String(value.summary || ""),
+  };
+}
+
+function clampScore(value) {
+  const numeric = Number(value);
+  if (!Number.isFinite(numeric)) {
+    return 0;
+  }
+
+  return Math.max(0, Math.min(100, Math.round(numeric)));
+}
+
+function normalizeSeverity(value) {
+  return ["critical", "high", "medium", "low"].includes(value)
+    ? value
+    : "medium";
+}
+
+function normalizeMergeRecommendation(value) {
+  return ["approve", "comment", "request_changes"].includes(value)
+    ? value
+    : "comment";
 }

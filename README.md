@@ -97,10 +97,9 @@ npm run dev
 http://127.0.0.1:5173
 ```
 
-如需启用 AI 代码评审，在另一个终端启动后端 API：
+如需启用 AI 代码评审，先启动后端 API：
 
 ```bash
-$env:OPENAI_API_KEY="你的 OpenAI API Key"
 npm run dev:api
 ```
 
@@ -108,6 +107,21 @@ npm run dev:api
 
 ```text
 http://127.0.0.1:8787/api/ai-review
+```
+
+然后在页面“大模型配置”里填写：
+
+- `BASE_URL`：第三方大模型 OpenAI-compatible 地址，例如 `https://api.openai.com/v1`、`https://api.deepseek.com/v1`。
+- `API_KEY`：对应平台的 API Key。
+- `MODEL`：模型名，例如 `gpt-4o-mini`、`deepseek-chat`、`qwen-plus`。
+
+也可以用后端环境变量作为默认值：
+
+```bash
+$env:OPENAI_BASE_URL="https://api.openai.com/v1"
+$env:OPENAI_API_KEY="你的 API Key"
+$env:OPENAI_MODEL="gpt-4o-mini"
+npm run dev:api
 ```
 
 ## 使用方式
@@ -121,7 +135,7 @@ https://github.com/owner/repo/pull/123
 
 3. 点击“分析 PR”。
 4. 查看风险评分、审查意见、PR 描述、测试建议和交付检查。
-5. 配置 `OPENAI_API_KEY` 后，点击“AI 代码评审”获取代码质量评价和合并建议。
+5. 在“大模型配置”中填写 `BASE_URL`、`API_KEY`、`MODEL` 后，点击“AI 代码评审”获取代码质量评价和合并建议。
 6. 复制或导出 Markdown 报告。
 
 ## 浏览器插件
