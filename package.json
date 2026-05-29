@@ -1,0 +1,42 @@
+{
+  "name": "ai-pr-review-assistant",
+  "version": "0.1.0",
+  "description": "AI PR Review assistant demo for structured pull request review and delivery checks.",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite --host 127.0.0.1",
+    "build": "tsc -b && vite build",
+    "preview": "vite preview --host 127.0.0.1",
+    "test": "vitest run",
+    "lint": "eslint ."
+  },
+  "keywords": [
+    "pull-request",
+    "code-review",
+    "ai-assistant",
+    "hackathon"
+  ],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "lucide-react": "0.475.0",
+    "react": "18.3.1",
+    "react-dom": "18.3.1"
+  },
+  "devDependencies": {
+    "@eslint/js": "9.19.0",
+    "@types/react": "18.3.18",
+    "@types/react-dom": "18.3.5",
+    "@vitejs/plugin-react": "4.3.4",
+    "eslint": "9.19.0",
+    "eslint-plugin-react-hooks": "5.1.0",
+    "eslint-plugin-react-refresh": "0.4.18",
+    "globals": "15.14.0",
+    "jsdom": "26.0.0",
+    "typescript": "5.7.3",
+    "typescript-eslint": "8.22.0",
+    "vite": "5.4.14",
+    "vitest": "2.1.8"
+  }
+}
