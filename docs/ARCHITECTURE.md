@@ -5,9 +5,10 @@
 AI PR Review Assistant 是一个 GitHub PR 链接驱动的自动审查工具。系统分为四层：
 
 1. PR 导入层：解析 GitHub PR URL，拉取 PR 元数据和 diff。
-2. Review 引擎层：解析 diff，运行规则，生成评分和文案。
-3. 展示层：呈现风险指标、审查意见、PR 描述和交付检查。
-4. 插件层：在 GitHub PR 页面内注入分析面板。
+2. 规则 Review 层：解析 diff，运行规则，生成评分和文案。
+3. AI Review 层：后端调用 OpenAI Responses API，对 diff 进行代码质量评审。
+4. 展示层：呈现风险指标、审查意见、AI 代码评审、PR 描述和交付检查。
+5. 插件层：在 GitHub PR 页面内注入分析面板。
 
 ```mermaid
 flowchart LR
@@ -18,6 +19,8 @@ flowchart LR
   E --> F["findings"]
   F --> G["PR description generator"]
   F --> H["test and delivery checklist"]
+  B --> I["/api/ai-review"]
+  I --> J["AI code quality review"]
 ```
 
 ## Review Engine
@@ -66,6 +69,16 @@ type Rule = {
 - `manifest.json`：声明 GitHub 页面 content script。
 - `content.js`：在 GitHub PR 页面读取当前 URL、拉取 PR、运行规则并渲染结果。
 - `content.css`：插件面板样式。
+
+## AI Review API
+
+AI 代码评审通过后端接口完成：
+
+- `server/aiReviewCore.mjs`：构造大模型评审 prompt、调用 OpenAI Responses API、解析结构化 JSON。
+- `server/aiReviewServer.mjs`：本地开发 API 服务。
+- `api/ai-review.js`：Vercel 部署入口。
+
+前端只调用 `/api/ai-review`，不会读取或暴露 `OPENAI_API_KEY`。
 
 ## Future Extensions
 

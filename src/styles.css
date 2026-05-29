@@ -431,7 +431,7 @@ textarea:focus {
 
 .tabs {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(4, 1fr);
   gap: 8px;
   padding: 12px;
   border-bottom: 1px solid #d8e2e3;
@@ -604,6 +604,136 @@ textarea:focus {
   font-weight: 800;
 }
 
+.section-toolbar button:disabled {
+  cursor: wait;
+  opacity: 0.65;
+}
+
+.ai-review-section {
+  display: grid;
+  gap: 14px;
+}
+
+.ai-empty {
+  display: grid;
+  min-height: 320px;
+  place-items: center;
+  align-content: center;
+  gap: 10px;
+  padding: 30px;
+  text-align: center;
+}
+
+.ai-empty h3,
+.ai-empty p {
+  margin: 0;
+}
+
+.ai-empty p {
+  max-width: 460px;
+  color: #607176;
+  line-height: 1.6;
+}
+
+.ai-review-content {
+  display: grid;
+  gap: 14px;
+  padding: 0 16px 16px;
+}
+
+.merge-card,
+.ai-summary,
+.dimension-grid article,
+.ai-findings article {
+  border: 1px solid #d8e2e3;
+  border-radius: 8px;
+  background: #ffffff;
+  padding: 16px;
+}
+
+.merge-card {
+  display: grid;
+  gap: 8px;
+  border-left: 5px solid #3c7bbf;
+}
+
+.merge-approve {
+  border-left-color: #267445;
+}
+
+.merge-comment {
+  border-left-color: #d97817;
+}
+
+.merge-request_changes {
+  border-left-color: #d93b30;
+}
+
+.merge-card span,
+.dimension-grid span,
+.ai-findings span {
+  color: #607176;
+  font-size: 0.78rem;
+  font-weight: 900;
+}
+
+.merge-card strong {
+  font-size: 2rem;
+  line-height: 1;
+}
+
+.merge-card p,
+.ai-summary p,
+.dimension-grid p,
+.ai-findings p {
+  margin: 0;
+  color: #40545a;
+  line-height: 1.6;
+}
+
+.ai-summary {
+  display: grid;
+  gap: 8px;
+}
+
+.ai-summary h3,
+.ai-findings h3 {
+  margin: 0;
+  font-size: 1rem;
+}
+
+.dimension-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.dimension-grid article {
+  display: grid;
+  gap: 8px;
+}
+
+.dimension-grid strong {
+  font-size: 1.5rem;
+  line-height: 1;
+}
+
+.ai-findings {
+  display: grid;
+  gap: 10px;
+}
+
+.ai-findings article {
+  display: grid;
+  gap: 8px;
+  border-left: 5px solid #d97817;
+}
+
+.ai-findings article div {
+  display: grid;
+  gap: 5px;
+}
+
 .checklist-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -749,6 +879,10 @@ textarea:focus {
   }
 
   .tabs {
+    grid-template-columns: 1fr;
+  }
+
+  .dimension-grid {
     grid-template-columns: 1fr;
   }
 

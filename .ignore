@@ -3,3 +3,4 @@ dist
 coverage
 dev-server.log
 preview-server.log
+ai-review-server.log

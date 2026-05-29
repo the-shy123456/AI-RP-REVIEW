@@ -5,20 +5,27 @@ import { MetricsGrid } from "./components/MetricsGrid";
 import { PullRequestImporter } from "./components/PullRequestImporter";
 import { ReviewPanel } from "./components/ReviewPanel";
 import {
+  requestAiCodeReview,
+  type AiCodeReview,
+} from "./lib/aiCodeReview";
+import {
   importGitHubPullRequest,
   PullRequestImportError,
 } from "./lib/githubPullRequest";
 import { createMarkdownReport } from "./lib/markdownReport";
 import { analyzePullRequest, type ReviewInput } from "./lib/reviewEngine";
 
+type ReviewTab = "findings" | "ai" | "description" | "tests";
+
 export function App() {
   const [prUrl, setPrUrl] = useState("");
   const [pullRequest, setPullRequest] = useState<ReviewInput | null>(null);
+  const [aiReview, setAiReview] = useState<AiCodeReview | null>(null);
+  const [aiReviewError, setAiReviewError] = useState("");
+  const [aiReviewLoading, setAiReviewLoading] = useState(false);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
-  const [activeTab, setActiveTab] = useState<"findings" | "description" | "tests">(
-    "findings",
-  );
+  const [activeTab, setActiveTab] = useState<ReviewTab>("findings");
 
   const report = useMemo(
     () => (pullRequest ? analyzePullRequest(pullRequest) : null),
@@ -32,6 +39,8 @@ export function App() {
     try {
       const imported = await importGitHubPullRequest(prUrl);
       setPullRequest(imported);
+      setAiReview(null);
+      setAiReviewError("");
       setActiveTab("findings");
     } catch (caught) {
       const message =
@@ -47,7 +56,31 @@ export function App() {
   function clearAnalysis() {
     setPrUrl("");
     setPullRequest(null);
+    setAiReview(null);
+    setAiReviewError("");
     setError("");
+  }
+
+  async function analyzeCodeWithAi() {
+    if (!pullRequest || !report) {
+      return;
+    }
+
+    setAiReviewError("");
+    setAiReviewLoading(true);
+    setActiveTab("ai");
+
+    try {
+      setAiReview(await requestAiCodeReview(pullRequest, report));
+    } catch (caught) {
+      setAiReviewError(
+        caught instanceof Error
+          ? caught.message
+          : "AI 代码评审失败，请稍后重试。",
+      );
+    } finally {
+      setAiReviewLoading(false);
+    }
   }
 
   function downloadReport() {
@@ -55,7 +88,7 @@ export function App() {
       return;
     }
 
-    const markdown = createMarkdownReport(pullRequest, report);
+    const markdown = createMarkdownReport(pullRequest, report, aiReview);
     const blob = new Blob([markdown], { type: "text/markdown;charset=utf-8" });
     const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
@@ -93,7 +126,11 @@ export function App() {
         {report && pullRequest ? (
           <ReviewPanel
             activeTab={activeTab}
-            fullReport={createMarkdownReport(pullRequest, report)}
+            aiReview={aiReview}
+            aiReviewError={aiReviewError}
+            aiReviewLoading={aiReviewLoading}
+            fullReport={createMarkdownReport(pullRequest, report, aiReview)}
+            onAiReview={analyzeCodeWithAi}
             onTabChange={setActiveTab}
             report={report}
           />

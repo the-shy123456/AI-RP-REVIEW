@@ -16,12 +16,21 @@ describe("createMarkdownReport", () => {
 +}`,
     };
     const report = analyzePullRequest(input);
-    const markdown = createMarkdownReport(input, report);
+    const markdown = createMarkdownReport(input, report, {
+      codeQualityScore: 78,
+      dimensions: [{ name: "完整性", score: 75, assessment: "仍需补测试。" }],
+      findings: [],
+      mergeRecommendation: "comment",
+      mergeRecommendationText: "补充测试后可以合并。",
+      positiveNotes: ["结构清晰"],
+      summary: "整体可维护。",
+    });
 
     expect(markdown).toContain("# AI PR Review Report");
     expect(markdown).toContain("feat: add html preview");
     expect(markdown).toContain("src/Preview.tsx");
     expect(markdown).toContain("疑似引入未净化的 HTML 注入点");
+    expect(markdown).toContain("## AI 代码质量评审");
     expect(markdown).toContain("## 测试建议");
   });
 });

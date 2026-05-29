@@ -11,6 +11,8 @@
 - 系统可以解析变更文件、文件状态、增删行数量。
 - 系统可以识别安全、测试、可靠性、可维护性和流程规范风险。
 - 系统可以生成风险评分、风险等级和审查建议。
+- 系统可以调用大模型对变更代码进行质量评审。
+- 系统可以输出代码质量分、维度评价、AI 发现的问题和合并建议。
 - 系统可以生成符合比赛 PR 规范的 PR 描述草稿。
 - 系统可以输出测试建议和交付检查清单。
 - 用户可以通过浏览器插件在 GitHub PR 页面直接分析当前 PR。
@@ -19,6 +21,8 @@
 
 - [ ] 打开首页即可看到 GitHub PR URL 导入入口。
 - [ ] 输入公开 GitHub PR URL 后可以自动拉取并分析。
+- [ ] 配置 `OPENAI_API_KEY` 后可以运行 AI 代码评审。
+- [ ] AI 代码评审包含总体评价、代码质量分、问题列表和合并建议。
 - [ ] 浏览器插件可加载到 Chrome/Edge，并在 GitHub PR 页面显示分析按钮。
 - [ ] `npm run test` 通过。
 - [ ] `npm run build` 通过。
@@ -26,20 +30,19 @@
 
 ## Technical Approach
 
-MVP 采用纯前端实现，避免后端部署成本。GitHub PR 导入逻辑放在 `src/lib/githubPullRequest.ts`，核心 Review 逻辑放在 `src/lib/reviewEngine.ts`，React 层只负责 URL 输入、导入状态、展示和交互。浏览器插件作为 `extension/` 独立目录提供。
+MVP 的 GitHub PR 导入和规则分析在前端完成；AI 代码评审通过后端接口完成，避免暴露 OpenAI API Key。GitHub PR 导入逻辑放在 `src/lib/githubPullRequest.ts`，核心规则 Review 逻辑放在 `src/lib/reviewEngine.ts`，AI 评审逻辑放在 `server/aiReviewCore.mjs`。
 
 ## Decision
 
 Context：参赛作品需要快速可演示，同时要能体现架构清晰和测试覆盖。
 
-Decision：使用 Vite + React + TypeScript + Vitest。网页端支持 GitHub PR URL 自动导入；插件端使用 Manifest V3 content script。AI 能力先以规则引擎和结构化生成模拟，后续再接入真实 LLM。
+Decision：使用 Vite + React + TypeScript + Vitest。网页端支持 GitHub PR URL 自动导入；插件端使用 Manifest V3 content script。AI 代码质量评审通过 OpenAI Responses API 和结构化 JSON 输出完成。
 
-Consequences：MVP 可直接分析公开 GitHub PR，演示路径清晰；不足是 GitHub API rate limit 受匿名访问限制，且暂不支持私有仓库和 Gitee。
+Consequences：MVP 可直接分析公开 GitHub PR，演示路径清晰；AI 评审需要后端环境变量 `OPENAI_API_KEY`。不足是 GitHub API rate limit 受匿名访问限制，且暂不支持私有仓库和 Gitee。
 
 ## Out of Scope
 
 - 不在 MVP 中接入 GitHub/Gitee OAuth 或私有仓库授权。
-- 不在 MVP 中调用真实大模型 API。
 - 不在 MVP 中写入仓库评论或自动合并 PR。
 - 不伪造历史 commit 或 PR 时间线。
 

@@ -25,12 +25,39 @@ AI PR Review Assistant 是一个面向 GitHub Pull Request 的自动审查助手
 - GitHub PR 链接导入：通过 GitHub API 自动读取公开 PR 的标题、描述和 diff。
 - PR 风险评分：根据内置规则和变更规模生成 0-100 风险分。
 - 结构化审查意见：覆盖安全、测试、可靠性、可维护性和流程规范。
+- AI 代码质量评审：大模型阅读 PR diff，评价代码质量、漏洞风险、测试充分性、考虑是否周到，并给出合并建议。
 - 变更文件解析：从 PR diff 中识别文件状态、增删行数量。
 - PR 描述生成：按比赛规范生成“功能描述 / 实现思路 / 测试方式 / Review 关注点”。
 - 测试与交付检查：提醒补充测试、README 依赖说明和主分支可运行要求。
 - Markdown 报告导出：可下载 Review 结果作为评审记录或 PR 评论草稿。
 - 一键复制：可复制 PR 描述或完整 Review 报告。
 - 浏览器插件：在 GitHub PR 页面内直接分析当前 PR。
+
+## 当前规则
+
+规则引擎负责快速筛查确定性风险：
+
+- 缺少可审查的 diff 内容。
+- PR 标题格式不清晰。
+- 访问令牌疑似暴露在前端存储或请求体中。
+- 未净化 HTML 注入点，例如 `dangerouslySetInnerHTML` / `innerHTML`。
+- 删除测试文件。
+- 异步 loading 状态缺少 `finally` 兜底。
+- 生产路径残留 `console.error` / `console.log` / `console.warn`。
+- PR 描述过短。
+- 功能变更没有对应测试变更。
+- PR 规模偏大，建议拆分。
+
+## AI 代码评审
+
+AI 代码评审负责规则难以覆盖的主观质量判断：
+
+- 是否存在潜在漏洞、输入校验不足、权限或数据泄露风险。
+- 代码是否整洁、命名是否清楚、职责是否单一、复杂度是否合理。
+- 变更是否考虑周到，包括错误处理、边界条件、加载状态和兼容性。
+- 功能是否完整，是否存在只覆盖 happy path 的情况。
+- 测试是否充分，是否覆盖失败路径和关键边界。
+- 是否建议合并：建议合并、有条件合并、建议修改后再合并。
 
 ## 原创功能范围
 
@@ -53,6 +80,7 @@ AI PR Review Assistant 是一个面向 GitHub Pull Request 的自动审查助手
 - ESLint 9.19.0：代码规范检查。
 - lucide-react 0.475.0：按钮与模块图标。
 - Chrome/Edge Manifest V3：浏览器插件版本。
+- OpenAI Responses API：AI 代码质量评审。
 
 完整依赖版本以 `package.json` 和 `package-lock.json` 为准。
 
@@ -69,6 +97,19 @@ npm run dev
 http://127.0.0.1:5173
 ```
 
+如需启用 AI 代码评审，在另一个终端启动后端 API：
+
+```bash
+$env:OPENAI_API_KEY="你的 OpenAI API Key"
+npm run dev:api
+```
+
+默认后端地址：
+
+```text
+http://127.0.0.1:8787/api/ai-review
+```
+
 ## 使用方式
 
 1. 打开网页端。
@@ -80,7 +121,8 @@ https://github.com/owner/repo/pull/123
 
 3. 点击“分析 PR”。
 4. 查看风险评分、审查意见、PR 描述、测试建议和交付检查。
-5. 复制或导出 Markdown 报告。
+5. 配置 `OPENAI_API_KEY` 后，点击“AI 代码评审”获取代码质量评价和合并建议。
+6. 复制或导出 Markdown 报告。
 
 ## 浏览器插件
 
@@ -137,4 +179,4 @@ npm run lint
 - 支持 GitHub Token 配置以提高 API rate limit。
 - 支持 GitHub Enterprise 和 Gitee PR。
 - 支持团队自定义规则集。
-- 接入真实 LLM，对规则命中结果进行上下文解释和修复建议扩写。
+- 支持把 AI Review 结果自动发布为 GitHub PR 评论。
