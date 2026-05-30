@@ -1,4 +1,4 @@
-import { defineConfig } from "vite";
+import { defineConfig, loadEnv } from "vite";
 import react from "@vitejs/plugin-react";
 import { handleAiReviewRequest } from "./server/aiReviewCore.mjs";
 import {
@@ -9,10 +9,33 @@ import {
 } from "./server/githubAuthCore.mjs";
 import { handleGitHubPullRequestRequest } from "./server/githubPullRequestCore.mjs";
 
-export default defineConfig({
-  base: "./",
-  plugins: [react(), localApiPlugin()],
+export default defineConfig(({ mode }) => {
+  loadServerEnv(mode);
+
+  return {
+    base: "./",
+    plugins: [react(), localApiPlugin()],
+  };
 });
+
+function loadServerEnv(mode) {
+  const env = loadEnv(mode, process.cwd(), "");
+  const serverEnvKeys = [
+    "GITHUB_CLIENT_ID",
+    "GITHUB_CLIENT_SECRET",
+    "GITHUB_TOKEN",
+    "OPENAI_API_KEY",
+    "OPENAI_BASE_URL",
+    "OPENAI_MODEL",
+    "OPENAI_PROTOCOL",
+  ];
+
+  serverEnvKeys.forEach((key) => {
+    if (!process.env[key] && env[key]) {
+      process.env[key] = env[key];
+    }
+  });
+}
 
 function localApiPlugin() {
   return {
