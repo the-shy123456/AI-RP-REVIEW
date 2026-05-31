@@ -1,7 +1,7 @@
 (function () {
   const rootId = "ai-pr-review-assistant-root";
   const configStorageKey = "ai-pr-review.extension.llm-config";
-  const webAppOrigin = "http://127.0.0.1:5173";
+  const webAppOrigin = "https://chige.9e.nz";
   const defaultLlmConfig = {
     apiKey: "",
     baseUrl: "https://api.openai.com/v1",

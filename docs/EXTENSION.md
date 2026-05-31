@@ -21,14 +21,14 @@ Chrome / Edge：
 3. 点击 Load unpacked。
 4. 选择仓库中的 `extension/` 目录。
 5. 打开公开 GitHub PR 页面，点击右下角面板中的“分析当前 PR”。
-6. 如果遇到 GitHub 403，先确认网页端 `npm run dev` 正在运行，再在插件面板点击“登录 GitHub”完成授权。授权完成页会提示回到 GitHub PR 页面，插件会自动刷新授权状态。
+6. 如果遇到 GitHub 403，在插件面板点击“登录 GitHub”，通过 `https://chige.9e.nz` 完成 OAuth 授权。授权完成页会提示回到 GitHub PR 页面，插件会自动刷新授权状态。
 7. 如需 AI 代码评审，在面板顶部填写大模型配置并点击“保存配置”，然后切到“AI 代码评审”页签。
 
 ## 权限说明
 
 - `storage`：保存插件内的大模型配置，刷新 GitHub 页面后继续可用。
 - `https://api.github.com/*`：读取公开 PR metadata 和 diff。
-- `http://127.0.0.1:5173/*`：复用网页端 GitHub OAuth 会话和本地 PR 读取代理。
+- `https://chige.9e.nz/*`：复用公网 Web 端 GitHub OAuth 会话和 PR 读取代理。
 - `https://*/*` / `http://*/*`：允许后台服务请求用户配置的 OpenAI-compatible 第三方大模型接口。
 
 ## 说明

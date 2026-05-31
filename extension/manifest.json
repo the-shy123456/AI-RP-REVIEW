@@ -7,7 +7,7 @@
   "host_permissions": [
     "https://github.com/*",
     "https://api.github.com/*",
-    "http://127.0.0.1:5173/*",
+    "https://chige.9e.nz/*",
     "https://*/*",
     "http://*/*"
   ],

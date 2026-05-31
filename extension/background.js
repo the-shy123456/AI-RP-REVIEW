@@ -1,7 +1,7 @@
 const MAX_DIFF_CHARS = 90000;
 const DEFAULT_BASE_URL = "https://api.openai.com/v1";
 const DEFAULT_PROTOCOL = "chat_completions";
-const LOCAL_API_ORIGIN = "http://127.0.0.1:5173";
+const WEB_APP_ORIGIN = "https://chige.9e.nz";
 const SYSTEM_PROMPT =
   "你是资深代码审查工程师。请基于 PR diff 做严格但务实的代码评审，关注漏洞、边界条件、可维护性、完整性、测试缺口和合并风险。只输出 JSON，不要输出 Markdown。";
 const JSON_OUTPUT_INSTRUCTION =
@@ -116,7 +116,7 @@ async function handleRuntimeMessage(message) {
 
 async function fetchLocalJson(path, options = {}) {
   try {
-    const response = await fetch(`${LOCAL_API_ORIGIN}${path}`, {
+    const response = await fetch(`${WEB_APP_ORIGIN}${path}`, {
       credentials: "include",
       ...options,
     });

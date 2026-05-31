@@ -263,7 +263,13 @@ function renderCallbackPage({
 function serializeCookie(
   name,
   value,
-  { httpOnly = false, maxAge, origin, path = "/", sameSite = "Lax" } = {},
+  {
+    httpOnly = false,
+    maxAge,
+    origin,
+    path = "/",
+    sameSite = String(origin).startsWith("https://") ? "None" : "Lax",
+  } = {},
 ) {
   const parts = [
     `${name}=${encodeURIComponent(value)}`,
